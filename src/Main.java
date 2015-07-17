@@ -48,75 +48,17 @@ public class Main {
                     List<Integer> cieloMG = Arrays.asList(values[6].split(",")).stream().map(str -> Integer.parseInt(str)).collect(Collectors.toList());
                     List<Integer> vientoMG = Arrays.asList(values[7].split(",")).stream().map(str -> Integer.parseInt(str)).collect(Collectors.toList());
                     List<Integer> temperaturaMG = Arrays.asList(values[8].split(",")).stream().map(str -> Integer.parseInt(str)).collect(Collectors.toList());
-                    predictions.add(new Prediction(id, date, cieloMS, moduloVientoMS, direccionVientoMS, temperaturaMS, cieloMG, vientoMG, temperaturaMG));
+                    predictions.add(new Prediction(id, date, cieloMS, moduloVientoMS, direccionVientoMS, temperaturaMS, cieloMG, vientoMG, temperaturaMG, true));
                 }
             } catch (FileNotFoundException ex) {
                 System.err.println("Error: No se encuentra el fichero.");
                 Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
             }
-            if (!predictions.isEmpty()) {
-                //Cabecera
-                FastVector attrs = new FastVector();
-                FastVector cieloMSVector = getCieloMSVector(predictions);
-                for (int i = 1; i <= 25; i++) {
-                    attrs.addElement(new Attribute("cieloMS" + i, cieloMSVector));
-                    attrs.addElement(new Attribute("moduloVientoMS" + i));
-                    attrs.addElement(new Attribute("direccionVientoMS" + i));
-                    attrs.addElement(new Attribute("temperaturaMS" + i));
-                }
-                FastVector cieloMGVector = getCieloMGVector(predictions);
-                attrs.addElement(new Attribute("class", cieloMGVector));
-                //Datos
-                Instances data = new Instances("Estado del cielo", attrs, 0);
-                for (Prediction p : predictions) {
-                    double[] vals = new double[data.numAttributes()];
-                    for (int i = 0; i <= 24; i++) {
-                        vals[i * 4] = cieloMSVector.indexOf(p.getCieloMS().get(i));
-                        vals[i * 4 + 1] = p.getModuloVientoMS().get(i);
-                        vals[i * 4 + 2] = p.getDireccionVientoMS().get(i);
-                        vals[i * 4 + 3] = p.getTemperaturaMS().get(i);
-                    }
-                    String str = p.getCieloMG().stream().map(i -> String.valueOf(i)).collect(Collectors.joining());
-                    vals[vals.length - 1] = cieloMGVector.indexOf(str);
-                    data.add(new Instance(1, vals));
-                }
-                ArffSaver saver = new ArffSaver();
-                saver.setInstances(data);
-                try {
-                    saver.setFile(new File("EstadoCielo.arff"));
-                    saver.writeBatch();
-                } catch (IOException ex) {
-                    Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
-                }
-            }
+            ArffGenerator generator = new ArffGenerator(predictions);
+            generator.generateFiles(ArffGenerator.CIELO);
+            generator.generateFiles(ArffGenerator.VIENTO);
         } else {
             System.err.println("Error: Se debe indicar el nombre del fichero a leer.");
         }
-    }
-
-    public static FastVector getCieloMSVector(List<Prediction> predictions) {
-        FastVector cieloMSVector = new FastVector();
-        for (Prediction p : predictions) {
-            for (String v : p.getCieloMS()) {
-                if (!cieloMSVector.contains(v)) {
-                    cieloMSVector.addElement(v);
-                }
-            }
-        }
-        return cieloMSVector;
-    }
-
-    public static FastVector getCieloMGVector(List<Prediction> predictions) {
-        FastVector cieloMGVector = new FastVector();
-        for (Prediction p : predictions) {
-            String val = "";
-            for (Integer v : p.getCieloMG()) {
-                val += v;
-            }
-            if (!cieloMGVector.contains(val)) {
-                cieloMGVector.addElement(val);
-            }
-        }
-        return cieloMGVector;
-    }
+    }  
 }
