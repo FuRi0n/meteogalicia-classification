@@ -42,38 +42,43 @@ public class ArffGenerator {
 
     private void generateFile(int type, int timeFrame) {
         List<TimeFrame> temporalData = new ArrayList<>();
-        for (Prediction p : predictions) {
-            if (timeFrame == TimeFrame.MORNING) {
-                temporalData.add(p.getMorning());
-            } else if (timeFrame == TimeFrame.AFTERNOON) {
-                temporalData.add(p.getAfternoon());
-            } else {
-                temporalData.add(p.getNight());
-            }
-        }
-        if (type == CIELO) {
-            FastVector attrs = generateCieloHeaders(temporalData.get(0).getCieloMS().size());
-            Instances data = generateCieloData(temporalData, attrs);
-            if (timeFrame == TimeFrame.MORNING) {
-                saveFile("EstadoCieloMañana.arff", data);
-            } else if (timeFrame == TimeFrame.AFTERNOON) {
-                saveFile("EstadoCieloTarde.arff", data);
-            } else if (timeFrame == TimeFrame.NIGHT) {
-                saveFile("EstadoCieloNoche.arff", data);
-            }
-        } else if (type == VIENTO) {
-            FastVector attrs = generateVientoHeaders(temporalData.get(0).getModuloVientoMS().size());
-            Instances data = generateVientoData(temporalData, attrs);
-            if (timeFrame == TimeFrame.MORNING) {
-                saveFile("VientoMañana.arff", data);
-            } else if (timeFrame == TimeFrame.AFTERNOON) {
-                saveFile("VientoTarde.arff", data);
-            } else if (timeFrame == TimeFrame.NIGHT) {
-                saveFile("VientoNoche.arff", data);
-            }
+        if (type == TEMPERATURA) {
+            FastVector attrs = generateTemperaturaHeaders(predictions.get(0).getTemperaturaMS().size());
+            Instances data = generateTemperaturaData(attrs);
+            saveFile("Temperatura.arff", data);
         } else {
-            System.out.println("Error: Temperature, can't classify numeric values.");
+            for (Prediction p : predictions) {
+                if (timeFrame == TimeFrame.MORNING) {
+                    temporalData.add(p.getMorning());
+                } else if (timeFrame == TimeFrame.AFTERNOON) {
+                    temporalData.add(p.getAfternoon());
+                } else {
+                    temporalData.add(p.getNight());
+                }
+            }
+            if (type == CIELO) {
+                FastVector attrs = generateCieloHeaders(temporalData.get(0).getCieloMS().size());
+                Instances data = generateCieloData(temporalData, attrs);
+                if (timeFrame == TimeFrame.MORNING) {
+                    saveFile("EstadoCieloMañana.arff", data);
+                } else if (timeFrame == TimeFrame.AFTERNOON) {
+                    saveFile("EstadoCieloTarde.arff", data);
+                } else if (timeFrame == TimeFrame.NIGHT) {
+                    saveFile("EstadoCieloNoche.arff", data);
+                }
+            } else if (type == VIENTO) {
+                FastVector attrs = generateVientoHeaders(temporalData.get(0).getModuloVientoMS().size());
+                Instances data = generateVientoData(temporalData, attrs);
+                if (timeFrame == TimeFrame.MORNING) {
+                    saveFile("VientoMañana.arff", data);
+                } else if (timeFrame == TimeFrame.AFTERNOON) {
+                    saveFile("VientoTarde.arff", data);
+                } else if (timeFrame == TimeFrame.NIGHT) {
+                    saveFile("VientoNoche.arff", data);
+                }
+            }
         }
+
     }
 
     private void saveFile(String name, Instances data) {
@@ -109,6 +114,15 @@ public class ArffGenerator {
         return attrs;
     }
 
+    private FastVector generateTemperaturaHeaders(Integer size) {
+        FastVector attrs = new FastVector();
+        for (int i = 1; i <= size; i++) {
+            attrs.addElement(new Attribute("temperaturaMS" + i));
+        }
+        attrs.addElement(new Attribute("temperaturaMG", getTemperaturaMGVector()));
+        return attrs;
+    }
+
     private Instances generateCieloData(List<TimeFrame> temporalData, FastVector attrs) {
         Instances data = new Instances("Estado del cielo", attrs, 0);
         FastVector cieloMSVector = getCieloMSVector();
@@ -136,6 +150,20 @@ public class ArffGenerator {
                 vals[i * 2 + 1] = direccionVientoMSVector.indexOf(t.getDireccionVientoMS().get(i));
             }
             vals[vals.length - 1] = vientoMGVector.indexOf(String.valueOf(t.getVientoMG()));
+            data.add(new Instance(1, vals));
+        }
+        return data;
+    }
+
+    private Instances generateTemperaturaData(FastVector attrs) {
+        Instances data = new Instances("Temperatura", attrs, 0);
+        FastVector cieloMGVector = getTemperaturaMGVector();
+        for (Prediction p : predictions) {
+            double[] vals = new double[data.numAttributes()];
+            for (int i = 0; i < predictions.get(0).getTemperaturaMS().size(); i++) {
+                vals[i] = p.getTemperaturaMS().get(i);
+            }
+            vals[vals.length - 1] = cieloMGVector.indexOf(p.getTemperaturaMG().get(0) + " " + p.getTemperaturaMG().get(1));
             data.add(new Instance(1, vals));
         }
         return data;
@@ -190,5 +218,18 @@ public class ArffGenerator {
             cieloMGVector.addElement(v);
         }
         return cieloMGVector;
+    }
+
+    private FastVector getTemperaturaMGVector() {
+
+        FastVector temperaturaMGVector = new FastVector();
+        for (int i = -10; i <= 45; i++) {
+            for (int j = -10; j <= 45; j++) {
+                if (i < j) {
+                    temperaturaMGVector.addElement(i + " " + j);
+                }
+            }
+        }
+        return temperaturaMGVector;
     }
 }

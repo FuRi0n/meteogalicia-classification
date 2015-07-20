@@ -57,6 +57,7 @@ public class Main {
             ArffGenerator generator = new ArffGenerator(predictions);
             generator.generateFiles(ArffGenerator.CIELO);
             generator.generateFiles(ArffGenerator.VIENTO);
+            generator.generateFiles(ArffGenerator.TEMPERATURA);
         } else {
             System.err.println("Error: Se debe indicar el nombre del fichero a leer.");
         }

@@ -27,9 +27,11 @@ public class Prediction {
         this.date = date;
         List<String> moduloVientoMSstr = transformModuloVientoMS(moduloVientoMS);
         List<String> direccionVientoMSstr = transformDireccionVientoMS(direccionVientoMS);
-        morning = new TimeFrame(cieloMS, moduloVientoMSstr, direccionVientoMSstr, temperaturaMS, cieloMG, vientoMG, summer, TimeFrame.MORNING);
-        afternoon = new TimeFrame(cieloMS, moduloVientoMSstr, direccionVientoMSstr, temperaturaMS, cieloMG, vientoMG, summer, TimeFrame.AFTERNOON);
-        night = new TimeFrame(cieloMS, moduloVientoMSstr, direccionVientoMSstr, temperaturaMS, cieloMG, vientoMG, summer, TimeFrame.NIGHT);
+        this.morning = new TimeFrame(cieloMS, moduloVientoMSstr, direccionVientoMSstr, temperaturaMS, cieloMG, vientoMG, summer, TimeFrame.MORNING);
+        this.afternoon = new TimeFrame(cieloMS, moduloVientoMSstr, direccionVientoMSstr, temperaturaMS, cieloMG, vientoMG, summer, TimeFrame.AFTERNOON);
+        this.night = new TimeFrame(cieloMS, moduloVientoMSstr, direccionVientoMSstr, temperaturaMS, cieloMG, vientoMG, summer, TimeFrame.NIGHT);
+        this.temperaturaMS = temperaturaMS;
+        this.temperaturaMG = temperaturaMG;
     }
 
     public String getId() {
