@@ -1,6 +1,7 @@
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -25,7 +26,7 @@ public class ArffGenerator {
     public static final int VIENTO = 1;
     public static final int TEMPERATURA = 2;
 
-    private List<Prediction> predictions;
+    private final List<Prediction> predictions;
 
     public ArffGenerator(List<Prediction> predictions) {
         this.predictions = predictions;
@@ -33,35 +34,45 @@ public class ArffGenerator {
 
     public void generateFiles(int type) {
         if (!predictions.isEmpty()) {
-            if (type == CIELO) {
-                //Headers
-                FastVector morningAttrs = generateCieloHeaders(predictions.get(0).getMorning().getCieloMS().size());
-                FastVector afternoonAttrs = generateCieloHeaders(predictions.get(0).getAfternoon().getCieloMS().size());
-                FastVector nightAttrs = generateCieloHeaders(predictions.get(0).getNight().getCieloMS().size());
-                //Data
-                Instances morningData = generateCieloData(TimeFrame.MORNING, morningAttrs);
-                Instances afternoonData = generateCieloData(TimeFrame.AFTERNOON, afternoonAttrs);
-                Instances nightData = generateCieloData(TimeFrame.NIGHT, nightAttrs);
-                //Save
-                saveFile("EstadoCieloMañana.arff", morningData);
-                saveFile("EstadoCieloTarde.arff", afternoonData);
-                saveFile("EstadoCieloNoche.arff", nightData);
-            } else if (type == VIENTO) {
-                //Headers
-                FastVector morningAttrs = generateVientoHeaders(predictions.get(0).getMorning().getModuloVientoMS().size());
-                FastVector afternoonAttrs = generateVientoHeaders(predictions.get(0).getAfternoon().getModuloVientoMS().size());
-                FastVector nightAttrs = generateVientoHeaders(predictions.get(0).getNight().getModuloVientoMS().size());
-                //Data
-                Instances morningData = generateVientoData(TimeFrame.MORNING, morningAttrs);
-                Instances afternoonData = generateVientoData(TimeFrame.AFTERNOON, afternoonAttrs);
-                Instances nightData = generateVientoData(TimeFrame.NIGHT, nightAttrs);
-                //Save
-                saveFile("VientoMañana.arff", morningData);
-                saveFile("VientoTarde.arff", afternoonData);
-                saveFile("VientoNoche.arff", nightData);
+            generateFile(type, TimeFrame.MORNING);
+            generateFile(type, TimeFrame.AFTERNOON);
+            generateFile(type, TimeFrame.NIGHT);
+        }
+    }
+
+    private void generateFile(int type, int timeFrame) {
+        List<TimeFrame> temporalData = new ArrayList<>();
+        for (Prediction p : predictions) {
+            if (timeFrame == TimeFrame.MORNING) {
+                temporalData.add(p.getMorning());
+            } else if (timeFrame == TimeFrame.AFTERNOON) {
+                temporalData.add(p.getAfternoon());
             } else {
-                System.out.println("Error: Temperature, can't classify numeric values.");
+                temporalData.add(p.getNight());
             }
+        }
+        if (type == CIELO) {
+            FastVector attrs = generateCieloHeaders(temporalData.get(0).getCieloMS().size());
+            Instances data = generateCieloData(temporalData, attrs);
+            if (timeFrame == TimeFrame.MORNING) {
+                saveFile("EstadoCieloMañana.arff", data);
+            } else if (timeFrame == TimeFrame.AFTERNOON) {
+                saveFile("EstadoCieloTarde.arff", data);
+            } else if (timeFrame == TimeFrame.NIGHT) {
+                saveFile("EstadoCieloNoche.arff", data);
+            }
+        } else if (type == VIENTO) {
+            FastVector attrs = generateVientoHeaders(temporalData.get(0).getModuloVientoMS().size());
+            Instances data = generateVientoData(temporalData, attrs);
+            if (timeFrame == TimeFrame.MORNING) {
+                saveFile("VientoMañana.arff", data);
+            } else if (timeFrame == TimeFrame.AFTERNOON) {
+                saveFile("VientoTarde.arff", data);
+            } else if (timeFrame == TimeFrame.NIGHT) {
+                saveFile("VientoNoche.arff", data);
+            }
+        } else {
+            System.out.println("Error: Temperature, can't classify numeric values.");
         }
     }
 
@@ -98,59 +109,33 @@ public class ArffGenerator {
         return attrs;
     }
 
-    private Instances generateCieloData(Integer timeFrame, FastVector attrs) {
+    private Instances generateCieloData(List<TimeFrame> temporalData, FastVector attrs) {
         Instances data = new Instances("Estado del cielo", attrs, 0);
         FastVector cieloMSVector = getCieloMSVector();
         FastVector cieloMGVector = getCieloMGVector();
-        for (Prediction p : predictions) {
+        for (TimeFrame t : temporalData) {
             double[] vals = new double[data.numAttributes()];
-            if (timeFrame == TimeFrame.MORNING) {
-                for (int i = 0; i < predictions.get(0).getMorning().getCieloMS().size(); i++) {
-                    vals[i] = cieloMSVector.indexOf(p.getMorning().getCieloMS().get(i));
-                }
-                vals[vals.length - 1] = cieloMGVector.indexOf(String.valueOf(p.getMorning().getCieloMG()));
-            } else if (timeFrame == TimeFrame.AFTERNOON) {
-                for (int i = 0; i < predictions.get(0).getAfternoon().getCieloMS().size(); i++) {
-                    vals[i] = cieloMSVector.indexOf(p.getAfternoon().getCieloMS().get(i));
-                }
-                vals[vals.length - 1] = cieloMGVector.indexOf(String.valueOf(p.getAfternoon().getCieloMG()));
-            } else {
-                for (int i = 0; i < predictions.get(0).getNight().getCieloMS().size(); i++) {
-                    vals[i] = cieloMSVector.indexOf(p.getNight().getCieloMS().get(i));
-                }
-                vals[vals.length - 1] = cieloMGVector.indexOf(String.valueOf(p.getNight().getCieloMG()));
+            for (int i = 0; i < temporalData.get(0).getCieloMS().size(); i++) {
+                vals[i] = cieloMSVector.indexOf(t.getCieloMS().get(i));
             }
+            vals[vals.length - 1] = cieloMGVector.indexOf(String.valueOf(t.getCieloMG()));
             data.add(new Instance(1, vals));
         }
         return data;
     }
 
-    private Instances generateVientoData(Integer timeFrame, FastVector attrs) {
+    private Instances generateVientoData(List<TimeFrame> temporalData, FastVector attrs) {
         Instances data = new Instances("Viento", attrs, 0);
         FastVector moduloVientoMSVector = getModuloVientoMSVector();
         FastVector direccionVientoMSVector = getDireccionVientoMSVector();
         FastVector vientoMGVector = getVientoMGVector();
-        for (Prediction p : predictions) {
+        for (TimeFrame t : temporalData) {
             double[] vals = new double[data.numAttributes()];
-            if (timeFrame == TimeFrame.MORNING) {
-                for (int i = 0; i < predictions.get(0).getMorning().getModuloVientoMS().size(); i++) {
-                    vals[i * 2] = moduloVientoMSVector.indexOf(p.getMorning().getModuloVientoMS().get(i));
-                    vals[i * 2 + 1] = direccionVientoMSVector.indexOf(p.getMorning().getDireccionVientoMS().get(i));
-                }
-                vals[vals.length - 1] = vientoMGVector.indexOf(String.valueOf(p.getMorning().getVientoMG()));
-            } else if (timeFrame == TimeFrame.AFTERNOON) {
-                for (int i = 0; i < predictions.get(0).getAfternoon().getModuloVientoMS().size(); i++) {
-                    vals[i * 2] = moduloVientoMSVector.indexOf(p.getAfternoon().getModuloVientoMS().get(i));
-                    vals[i * 2 + 1] = direccionVientoMSVector.indexOf(p.getAfternoon().getDireccionVientoMS().get(i));
-                }
-                vals[vals.length - 1] = vientoMGVector.indexOf(String.valueOf(p.getAfternoon().getVientoMG()));
-            } else {
-                for (int i = 0; i < predictions.get(0).getNight().getModuloVientoMS().size(); i++) {
-                    vals[i * 2] = moduloVientoMSVector.indexOf(p.getNight().getModuloVientoMS().get(i));
-                    vals[i * 2 + 1] = direccionVientoMSVector.indexOf(p.getNight().getDireccionVientoMS().get(i));
-                }
-                vals[vals.length - 1] = vientoMGVector.indexOf(String.valueOf(p.getNight().getVientoMG()));
+            for (int i = 0; i < temporalData.get(0).getModuloVientoMS().size(); i++) {
+                vals[i * 2] = moduloVientoMSVector.indexOf(t.getModuloVientoMS().get(i));
+                vals[i * 2 + 1] = direccionVientoMSVector.indexOf(t.getDireccionVientoMS().get(i));
             }
+            vals[vals.length - 1] = vientoMGVector.indexOf(String.valueOf(t.getVientoMG()));
             data.add(new Instance(1, vals));
         }
         return data;
