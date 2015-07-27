@@ -25,11 +25,10 @@ public class Prediction {
     public Prediction(String id, LocalDate date, List<String> cieloMS, List<Float> moduloVientoMS, List<Float> direccionVientoMS, List<Integer> temperaturaMS, List<Integer> cieloMG, List<Integer> vientoMG, List<Integer> temperaturaMG, Boolean summer) {
         this.id = id;
         this.date = date;
-        List<String> moduloVientoMSstr = transformModuloVientoMS(moduloVientoMS);
         List<String> direccionVientoMSstr = transformDireccionVientoMS(direccionVientoMS);
-        this.morning = new TimeFrame(cieloMS, moduloVientoMSstr, direccionVientoMSstr, temperaturaMS, cieloMG, vientoMG, summer, TimeFrame.MORNING);
-        this.afternoon = new TimeFrame(cieloMS, moduloVientoMSstr, direccionVientoMSstr, temperaturaMS, cieloMG, vientoMG, summer, TimeFrame.AFTERNOON);
-        this.night = new TimeFrame(cieloMS, moduloVientoMSstr, direccionVientoMSstr, temperaturaMS, cieloMG, vientoMG, summer, TimeFrame.NIGHT);
+        this.morning = new TimeFrame(cieloMS, moduloVientoMS, direccionVientoMSstr, temperaturaMS, cieloMG, vientoMG, summer, TimeFrame.MORNING);
+        this.afternoon = new TimeFrame(cieloMS, moduloVientoMS, direccionVientoMSstr, temperaturaMS, cieloMG, vientoMG, summer, TimeFrame.AFTERNOON);
+        this.night = new TimeFrame(cieloMS, moduloVientoMS, direccionVientoMSstr, temperaturaMS, cieloMG, vientoMG, summer, TimeFrame.NIGHT);
         this.temperaturaMS = temperaturaMS;
         this.temperaturaMG = temperaturaMG;
     }

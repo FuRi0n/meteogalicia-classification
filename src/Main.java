@@ -1,7 +1,9 @@
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -11,11 +13,7 @@ import java.util.Scanner;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
-import weka.core.Attribute;
-import weka.core.FastVector;
-import weka.core.Instance;
-import weka.core.Instances;
-import weka.core.converters.ArffSaver;
+import weka.classifiers.trees.J48;
 
 /*
  * To change this license header, choose License Headers in Project Properties.
@@ -54,12 +52,61 @@ public class Main {
                 System.err.println("Error: No se encuentra el fichero.");
                 Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
             }
+            //Arff files for classification
             ArffGenerator generator = new ArffGenerator(predictions);
             generator.generateFiles(ArffGenerator.CIELO);
             generator.generateFiles(ArffGenerator.VIENTO);
             generator.generateFiles(ArffGenerator.TEMPERATURA);
+
+            //BaseLines
+            System.out.println("Baseline:");
+            BaseLineGenerator bg = new BaseLineGenerator(predictions);
+            bg.generate();
+            System.out.println(bg.asText(false));
+            
+            //Classification
+            System.out.println("Classification:");
+            Classification cls = new Classification(new J48(), "EstadoCieloMañana.arff", 10, 1);
+            cls.classify();
+            cls.saveModel();
+            cls.setFile("EstadoCieloTarde.arff");
+            cls.classify();
+            cls.saveModel();
+            cls.setFile("EstadoCieloNoche.arff");
+            cls.classify();
+            cls.saveModel();
+            cls.setFile("VientoMañana.arff");
+            cls.classify();
+            cls.saveModel();
+            cls.setFile("VientoTarde.arff");
+            cls.classify();
+            cls.saveModel();
+            cls.setFile("VientoNoche.arff");
+            cls.classify();
+            cls.saveModel();
+            cls.setFile("TemperaturaMin.arff");
+            cls.classify();
+            cls.saveModel();
+            cls.setFile("TemperaturaMax.arff");
+            cls.classify();
+            cls.saveModel();
+            
+            // Regression
+            System.out.println("\nRegression:");
+            ProcessBuilder pb = new ProcessBuilder("python2.7", "Regression.py", args[0]);
+            try {
+                Process p = pb.start();
+                BufferedReader br = new BufferedReader(new InputStreamReader(p.getInputStream()));
+                String line;
+                while((line=br.readLine())!=null){
+                    System.out.println(line);
+                }
+                p.waitFor();
+            } catch (IOException | InterruptedException ex) {
+                Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
+            }
         } else {
             System.err.println("Error: Se debe indicar el nombre del fichero a leer.");
         }
-    }  
+    }
 }

@@ -3,8 +3,10 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 import weka.core.Attribute;
 import weka.core.FastVector;
 import weka.core.Instance;
@@ -44,8 +46,11 @@ public class ArffGenerator {
         List<TimeFrame> temporalData = new ArrayList<>();
         if (type == TEMPERATURA) {
             FastVector attrs = generateTemperaturaHeaders(predictions.get(0).getTemperaturaMS().size());
-            Instances data = generateTemperaturaData(attrs);
-            saveFile("Temperatura.arff", data);
+            Instances data = generateTemperaturaData(attrs, true);
+            saveFile("TemperaturaMin.arff", data);
+            attrs = generateTemperaturaHeaders(predictions.get(0).getTemperaturaMS().size());
+            data = generateTemperaturaData(attrs, false);
+            saveFile("TemperaturaMax.arff", data);
         } else {
             for (Prediction p : predictions) {
                 if (timeFrame == TimeFrame.MORNING) {
@@ -98,6 +103,7 @@ public class ArffGenerator {
         for (int i = 1; i <= size; i++) {
             attrs.addElement(new Attribute("cieloMS" + i, cieloMSVector));
         }
+//        attrs.addElement(new Attribute("ModeMS", cieloMSVector));
         attrs.addElement(new Attribute("cieloMG", getCieloMGVector()));
         return attrs;
     }
@@ -132,6 +138,16 @@ public class ArffGenerator {
             for (int i = 0; i < temporalData.get(0).getCieloMS().size(); i++) {
                 vals[i] = cieloMSVector.indexOf(t.getCieloMS().get(i));
             }
+//            Map<String, Long> counting = t.getCieloMS().stream().collect(Collectors.groupingBy(s -> s, Collectors.counting()));
+//            String max = "";
+//            Integer maxCount = 0;
+//            for(Map.Entry<String,Long> count:counting.entrySet()){
+//                if(count.getValue()>maxCount){
+//                    max = count.getKey();
+//                    maxCount = count.getValue().intValue();
+//                }
+//            }
+//            vals[vals.length - 2] = cieloMSVector.indexOf(max);
             vals[vals.length - 1] = cieloMGVector.indexOf(String.valueOf(t.getCieloMG()));
             data.add(new Instance(1, vals));
         }
@@ -145,8 +161,8 @@ public class ArffGenerator {
         FastVector vientoMGVector = getVientoMGVector();
         for (TimeFrame t : temporalData) {
             double[] vals = new double[data.numAttributes()];
-            for (int i = 0; i < temporalData.get(0).getModuloVientoMS().size(); i++) {
-                vals[i * 2] = moduloVientoMSVector.indexOf(t.getModuloVientoMS().get(i));
+            for (int i = 0; i < temporalData.get(0).getModuloVientoMSText().size(); i++) {
+                vals[i * 2] = moduloVientoMSVector.indexOf(t.getModuloVientoMSText().get(i));
                 vals[i * 2 + 1] = direccionVientoMSVector.indexOf(t.getDireccionVientoMS().get(i));
             }
             vals[vals.length - 1] = vientoMGVector.indexOf(String.valueOf(t.getVientoMG()));
@@ -155,7 +171,7 @@ public class ArffGenerator {
         return data;
     }
 
-    private Instances generateTemperaturaData(FastVector attrs) {
+    private Instances generateTemperaturaData(FastVector attrs, Boolean min) {
         Instances data = new Instances("Temperatura", attrs, 0);
         FastVector cieloMGVector = getTemperaturaMGVector();
         for (Prediction p : predictions) {
@@ -163,7 +179,11 @@ public class ArffGenerator {
             for (int i = 0; i < predictions.get(0).getTemperaturaMS().size(); i++) {
                 vals[i] = p.getTemperaturaMS().get(i);
             }
-            vals[vals.length - 1] = cieloMGVector.indexOf(p.getTemperaturaMG().get(0) + " " + p.getTemperaturaMG().get(1));
+            if (min) {
+                vals[vals.length - 1] = cieloMGVector.indexOf(String.valueOf(p.getTemperaturaMG().get(0)) /*+ " " + p.getTemperaturaMG().get(1)*/);
+            } else {
+                vals[vals.length - 1] = cieloMGVector.indexOf(/*p.getTemperaturaMG().get(0) + " " + */String.valueOf(p.getTemperaturaMG().get(1)));
+            }
             data.add(new Instance(1, vals));
         }
         return data;
@@ -224,11 +244,11 @@ public class ArffGenerator {
 
         FastVector temperaturaMGVector = new FastVector();
         for (int i = -10; i <= 45; i++) {
-            for (int j = -10; j <= 45; j++) {
-                if (i < j) {
-                    temperaturaMGVector.addElement(i + " " + j);
-                }
-            }
+            //for (int j = -10; j <= 45; j++) {
+            //    if (i < j) {
+            temperaturaMGVector.addElement(String.valueOf(i) /*+ " " + j*/);
+            //}
+            //}
         }
         return temperaturaMGVector;
     }

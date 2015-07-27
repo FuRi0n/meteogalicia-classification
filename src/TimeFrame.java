@@ -1,4 +1,5 @@
 
+import java.util.ArrayList;
 import java.util.List;
 
 /*
@@ -20,12 +21,12 @@ public class TimeFrame {
     public static final int NIGHT = 2;
 
     private List<String> cieloMS;
-    private List<String> moduloVientoMS;
+    private List<Float> moduloVientoMS;
     private List<String> direccionVientoMS;
     private Integer cieloMG;
     private Integer vientoMG;
 
-    public TimeFrame(List<String> cieloMS, List<String> moduloVientoMS, List<String> direccionVientoMS, List<Integer> temperaturaMS, List<Integer> cieloMG, List<Integer> vientoMG, Boolean summer, Integer timeFrame) {
+    public TimeFrame(List<String> cieloMS, List<Float> moduloVientoMS, List<String> direccionVientoMS, List<Integer> temperaturaMS, List<Integer> cieloMG, List<Integer> vientoMG, Boolean summer, Integer timeFrame) {
         if (summer) {
             if (timeFrame == MORNING) {
                 this.cieloMS = cieloMS.subList(0, 8);
@@ -77,11 +78,11 @@ public class TimeFrame {
         this.cieloMS = cieloMS;
     }
 
-    public List<String> getModuloVientoMS() {
+    public List<Float> getModuloVientoMS() {
         return moduloVientoMS;
     }
 
-    public void setModuloVientoMS(List<String> moduloVientoMS) {
+    public void setModuloVientoMS(List<Float> moduloVientoMS) {
         this.moduloVientoMS = moduloVientoMS;
     }
 
@@ -107,5 +108,73 @@ public class TimeFrame {
 
     public void setVientoMG(Integer vientoMG) {
         this.vientoMG = vientoMG;
-    }  
+    }
+    
+    public List<String> getModuloVientoMSText() {
+        List<String> moduloVientoMSstr = new ArrayList<>();
+        for (Float v : moduloVientoMS) {
+            if (v <= 5) {
+                moduloVientoMSstr.add("CALMA");
+            } else if (v > 5 && v <= 20) {
+                moduloVientoMSstr.add("DEBIL");
+            } else if (v > 20 && v <= 40) {
+                moduloVientoMSstr.add("MODERADO");
+            } else if (v > 40 && v <= 70) {
+                moduloVientoMSstr.add("FUERTE");
+            } else if (v > 70 && v <= 120) {
+                moduloVientoMSstr.add("MUY_FUERTE");
+            } else {
+                moduloVientoMSstr.add("HURACANADOS");
+            }
+        }
+        return moduloVientoMSstr;
+    }
+
+    public String getCieloMGText() {
+        switch (cieloMG) {
+            case 101:
+                return "SUNNY";
+            case 102:
+                return "HIGH_CLOUDS";
+            case 103:
+                return "PARTLY_CLOUDY";
+            case 104:
+                return "OVERCAST";
+            case 105:
+                return "CLOUDY";
+            case 106:
+                return "FOG";
+            case 107:
+                return "SHOWERS";
+            case 108:
+                return "OVERCAST_AND_SHOWERS";
+            case 109:
+                return "INTERMITENT_SNOW";
+            case 110:
+                return "DRIZZLE";
+            case 111:
+                return "RAIN";
+            case 112:
+                return "SNOW";
+            case 113:
+                return "STORMS";
+            case 114:
+                return "MIST";
+            case 115:
+                return "FOG_BANK";
+            case 116:
+                return "MID_CLOUDS";
+            case 117:
+                return "WEAK_RAIN";
+            case 118:
+                return "WEAK_SHOWERS";
+            case 119:
+                return "STORM_THEN_CLOUDY";
+            case 120:
+                return "MELTED_SNOW";
+            case 121:
+                return "RAIN_HAIL";
+        }
+        return "";
+    }
 }
