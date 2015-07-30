@@ -64,7 +64,7 @@ public class Main {
                 System.err.println("Error: Extensión del fichero/DB no válido.");
             }
         } else {
-            System.err.println("Parámetros: <nombre fichero/DB> <clasificador>");
+            System.err.println("Parámetros: <nombre fichero/DB> <clasificador (J48/RF)>");
         }
     }
 

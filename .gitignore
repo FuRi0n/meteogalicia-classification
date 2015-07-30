@@ -1,3 +1,4 @@
 datos/*
 *.arff
 *.model
+/dist/
