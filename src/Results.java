@@ -67,13 +67,14 @@ public class Results {
         NumberFormat format = DecimalFormat.getInstance(new Locale("es", "ES"));
         format.setMaximumFractionDigits(2);
         format.setMinimumFractionDigits(2);
+        text+="Resultados\n";
         for (Double d : classification) {
             text += format.format((d/count)*100) + "%\n";
         }
         for (Double d : regression) {
             text += format.format((d/count)*100) + "%\n";
         }
-        text += "\n";
+        text += "\nLinea Base\n";
         for (Double d : baseline) {
             text += format.format((d/count)*100) + "%\n";
         }
