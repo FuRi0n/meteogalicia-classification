@@ -18,7 +18,9 @@ import java.util.Scanner;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
+import weka.classifiers.Classifier;
 import weka.classifiers.trees.J48;
+import weka.classifiers.trees.RandomForest;
 
 /*
  * To change this license header, choose License Headers in Project Properties.
@@ -35,11 +37,11 @@ public class Main {
      * @param args the command line arguments
      */
     public static void main(String[] args) {
-        if (args.length >= 1) {
+        if (args.length == 2) {
             if (args[0].endsWith("txt")) {
                 List<Prediction> predictions = readFile(args[0]);
                 if (!predictions.isEmpty()) {
-                    Results res = classify(predictions);
+                    Results res = classify(predictions, args[1]);
                     res.setRegression(regression(args[0]));
                     System.out.println(res.toString());
                 } else {
@@ -50,7 +52,7 @@ public class Main {
                 Results res = new Results();
                 for (List<Prediction> predictions : predictionsLists) {
                     if (!predictions.isEmpty()) {
-                        Results r= classify(predictions);
+                        Results r = classify(predictions, args[1]);
                         r.setRegression(regression(args[0], predictions.get(0).getId()));
                         res.add(r);
                     } else {
@@ -62,7 +64,7 @@ public class Main {
                 System.err.println("Error: Extensión del fichero/DB no válido.");
             }
         } else {
-            System.err.println("Parámetros: <nombre fichero/DB>");
+            System.err.println("Parámetros: <nombre fichero/DB> <clasificador>");
         }
     }
 
@@ -132,7 +134,7 @@ public class Main {
         return predictionsList;
     }
 
-    public static Results classify(List<Prediction> predictions) {
+    public static Results classify(List<Prediction> predictions, String classifierName) {
         //Arff files for classification
         ArffGenerator generator = new ArffGenerator(predictions);
         generator.generateFiles(ArffGenerator.CIELO);
@@ -146,33 +148,44 @@ public class Main {
         //System.out.println(bg.asText(false));
 
         //Classification
-        Classification cls = new Classification(new J48(), "EstadoCieloMañana.arff", 10, 1);
-        List<Double> classification = new ArrayList<>();
-        classification.add(cls.classify());
+        Classifier c;
+        switch (classifierName) {
+            case "J48":
+                c = new J48();
+                break;
+            case "RF":
+                c = new RandomForest();
+                break;
+            default:
+                c = new J48();
+        }
+        Classification cls = new Classification(c, "EstadoCieloMañana.arff", 10, 1);
+        List<Double> classificationResults = new ArrayList<>();
+        classificationResults.add(cls.classify());
         //cls.saveModel();
         cls.setFile("EstadoCieloTarde.arff");
-        classification.add(cls.classify());
+        classificationResults.add(cls.classify());
         //cls.saveModel();
         cls.setFile("EstadoCieloNoche.arff");
-        classification.add(cls.classify());
+        classificationResults.add(cls.classify());
         //cls.saveModel();
         cls.setFile("VientoMañana.arff");
-        classification.add(cls.classify());
+        classificationResults.add(cls.classify());
         //cls.saveModel();
         cls.setFile("VientoTarde.arff");
-        classification.add(cls.classify());
+        classificationResults.add(cls.classify());
         //cls.saveModel();
         cls.setFile("VientoNoche.arff");
-        classification.add(cls.classify());
+        classificationResults.add(cls.classify());
         //cls.saveModel();
         cls.setFile("TemperaturaMin.arff");
-        classification.add(cls.classify());
+        classificationResults.add(cls.classify());
         //cls.saveModel();
         cls.setFile("TemperaturaMax.arff");
-        classification.add(cls.classify());
+        classificationResults.add(cls.classify());
         //cls.saveModel();
 
-        return new Results(baseline, classification);
+        return new Results(baseline, classificationResults);
     }
 
     public static List<Double> regression(String dataFile) {

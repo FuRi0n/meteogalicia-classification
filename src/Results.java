@@ -1,6 +1,9 @@
 
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 /*
  * To change this license header, choose License Headers in Project Properties.
@@ -61,15 +64,18 @@ public class Results {
     @Override
     public String toString() {
         String text = "";
+        NumberFormat format = DecimalFormat.getInstance(new Locale("es", "ES"));
+        format.setMaximumFractionDigits(2);
+        format.setMinimumFractionDigits(2);
         for (Double d : classification) {
-            text += String.format("%.2f", (d/count)*100) + "%\n";
+            text += format.format((d/count)*100) + "%\n";
         }
         for (Double d : regression) {
-            text += String.format("%.2f", (d/count)*100) + "%\n";
+            text += format.format((d/count)*100) + "%\n";
         }
         text += "\n";
         for (Double d : baseline) {
-            text += String.format("%.2f", (d/count)*100) + "%\n";
+            text += format.format((d/count)*100) + "%\n";
         }
         return text;
     }
