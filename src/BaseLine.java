@@ -36,9 +36,4 @@ public class BaseLine {
     public Integer getTotal() {
         return total;
     }
-
-    @Override
-    public String toString() {
-        return variable + ": " + (correct / (float) total) * 100 + "%";
-    }
 }

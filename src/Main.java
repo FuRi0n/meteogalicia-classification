@@ -39,24 +39,30 @@ public class Main {
             if (args[0].endsWith("txt")) {
                 List<Prediction> predictions = readFile(args[0]);
                 if (!predictions.isEmpty()) {
-                    classify(predictions, false);
-                    regression(args[0]);
+                    Results res = classify(predictions);
+                    res.setRegression(regression(args[0]));
+                    System.out.println(res.toString());
                 } else {
-                    System.err.println("Error: No se pueden leer los datos del fichero/DB.");
+                    System.err.println("Error: No se pueden leer los datos del fichero.");
                 }
             } else if (args[0].endsWith("db")) {
                 List<List<Prediction>> predictionsLists = readDB(args[0]);
+                Results res = new Results();
                 for (List<Prediction> predictions : predictionsLists) {
                     if (!predictions.isEmpty()) {
-                        classify(predictions, true);
-                        regression(args[0], predictions.get(0).getId());
+                        Results r= classify(predictions);
+                        r.setRegression(regression(args[0], predictions.get(0).getId()));
+                        res.add(r);
+                    } else {
+                        System.err.println("Error: No se pueden leer los datos de la DB.");
                     }
                 }
+                System.out.println(res.toString());
             } else {
                 System.err.println("Error: Extensión del fichero/DB no válido.");
             }
         } else {
-            System.err.println("Parámetros: <nombre fichero/DB> <Separado por municipios (true/false)>");
+            System.err.println("Parámetros: <nombre fichero/DB>");
         }
     }
 
@@ -126,82 +132,82 @@ public class Main {
         return predictionsList;
     }
 
-    public static void classify(List<Prediction> predictions, Boolean printId) {
+    public static Results classify(List<Prediction> predictions) {
         //Arff files for classification
         ArffGenerator generator = new ArffGenerator(predictions);
         generator.generateFiles(ArffGenerator.CIELO);
         generator.generateFiles(ArffGenerator.VIENTO);
         generator.generateFiles(ArffGenerator.TEMPERATURA);
 
-        if (printId) {
-            System.out.println("\nMunicipio: " + predictions.get(0).getId()+"\n");
-        }
-
         //BaseLines
-        System.out.println("Baseline:");
         BaseLineGenerator bg = new BaseLineGenerator(predictions);
         bg.generate();
-        System.out.println(bg.asText(false));
+        List<Double> baseline = bg.asList();
+        //System.out.println(bg.asText(false));
 
         //Classification
-        System.out.println("Classification:");
         Classification cls = new Classification(new J48(), "EstadoCieloMañana.arff", 10, 1);
-        cls.classify();
-        cls.saveModel();
+        List<Double> classification = new ArrayList<>();
+        classification.add(cls.classify());
+        //cls.saveModel();
         cls.setFile("EstadoCieloTarde.arff");
-        cls.classify();
-        cls.saveModel();
+        classification.add(cls.classify());
+        //cls.saveModel();
         cls.setFile("EstadoCieloNoche.arff");
-        cls.classify();
-        cls.saveModel();
+        classification.add(cls.classify());
+        //cls.saveModel();
         cls.setFile("VientoMañana.arff");
-        cls.classify();
-        cls.saveModel();
+        classification.add(cls.classify());
+        //cls.saveModel();
         cls.setFile("VientoTarde.arff");
-        cls.classify();
-        cls.saveModel();
+        classification.add(cls.classify());
+        //cls.saveModel();
         cls.setFile("VientoNoche.arff");
-        cls.classify();
-        cls.saveModel();
+        classification.add(cls.classify());
+        //cls.saveModel();
         cls.setFile("TemperaturaMin.arff");
-        cls.classify();
-        cls.saveModel();
+        classification.add(cls.classify());
+        //cls.saveModel();
         cls.setFile("TemperaturaMax.arff");
-        cls.classify();
-        cls.saveModel();
+        classification.add(cls.classify());
+        //cls.saveModel();
+
+        return new Results(baseline, classification);
     }
 
-    public static void regression(String dataFile) {
+    public static List<Double> regression(String dataFile) {
         // Regression
-        System.out.println("\nRegression:");
+        List<Double> res = new ArrayList<>();
         ProcessBuilder pb = new ProcessBuilder("python2.7", "Regression.py", dataFile);
         try {
             Process p = pb.start();
             BufferedReader br = new BufferedReader(new InputStreamReader(p.getInputStream()));
             String line;
             while ((line = br.readLine()) != null) {
-                System.out.println(line);
+                res.add(Double.parseDouble(line));
             }
             p.waitFor();
         } catch (IOException | InterruptedException ex) {
             Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
         }
+        return res;
     }
 
-    public static void regression(String dataFile, String idMG) {
+    public static List<Double> regression(String dataFile, String idMG) {
         // Regression
-        System.out.println("\nRegression:");
+        List<Double> res = new ArrayList<>();
         ProcessBuilder pb = new ProcessBuilder("python2.7", "Regression.py", dataFile, idMG);
         try {
             Process p = pb.start();
             BufferedReader br = new BufferedReader(new InputStreamReader(p.getInputStream()));
             String line;
             while ((line = br.readLine()) != null) {
-                System.out.println(line);
+                res.add(Double.parseDouble(line));
             }
             p.waitFor();
         } catch (IOException | InterruptedException ex) {
             Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
         }
+        return res;
     }
 }

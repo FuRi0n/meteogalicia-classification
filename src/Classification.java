@@ -1,11 +1,9 @@
 
-import java.io.File;
 import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import weka.classifiers.Classifier;
 import weka.classifiers.Evaluation;
-import weka.classifiers.trees.J48;
 import weka.core.Instances;
 import weka.core.SerializationHelper;
 import weka.core.converters.ConverterUtils;
@@ -37,7 +35,7 @@ public class Classification {
         this.file = file;
     }
 
-    public void classify() {
+    public Double classify() {
         try {
             // load data
             Instances data = ConverterUtils.DataSource.read(file);
@@ -45,10 +43,11 @@ public class Classification {
             // perform cross-validation
             Evaluation eval = new Evaluation(data);
             eval.crossValidateModel(cls, data, folds, new Random(seed));
-            System.out.println(String.format("%.4f", eval.pctCorrect()) + "%");
+            return eval.pctCorrect()/(double)100;
         } catch (Exception ex) {
             Logger.getLogger(Classification.class.getName()).log(Level.SEVERE, null, ex);
         }
+        return null;
     }
 
     public void saveModel() {

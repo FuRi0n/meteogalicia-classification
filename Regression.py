@@ -19,7 +19,6 @@ if len(sys.argv)>1:
             temperaturaMGMin.append(int(variables[8].split(',')[0]))
             temperaturaMGMax.append(int(variables[8].rstrip().split(',')[1]))
         f.close()
-
     elif sys.argv[1].endswith("db"):
         conn = sqlite3.connect(sys.argv[1])
         c = conn.cursor()
@@ -39,12 +38,13 @@ else:
 clf = linear_model.LinearRegression()
 #clf.fit(temperaturaMSTrain, temperaturaMGMinTrain)
 
-print ('Min Temperature')
+#print ('Min Temperature')
 #print 'Coefficients: \n', clf.coef_
 #print("Residual sum of squares: %.2f" % np.mean((clf.predict(temperaturaMSTest) - temperaturaMGMinTest) ** 2))
 #print('Variance score: %.2f' % clf.score(temperaturaMSTest, temperaturaMGMinTest))
 scores = cross_validation.cross_val_score(clf, temperaturaMS, temperaturaMGMin, cv=10)
-print("Accuracy: %0.4f (+/- %0.2f)" % (scores.mean(), scores.std() * 2))
+#print("Accuracy: %0.4f (+/- %0.2f)" % (scores.mean(), scores.std() * 2))
+print(scores.mean())
 
 # Save model
 #clf.fit(temperaturaMS, temperaturaMGMin)
@@ -53,12 +53,13 @@ print("Accuracy: %0.4f (+/- %0.2f)" % (scores.mean(), scores.std() * 2))
 clf = linear_model.LinearRegression()
 #clf.fit(temperaturaMSTrain, temperaturaMGMaxTrain)
 
-print ('Max Temperature')
+#print ('Max Temperature')
 #print 'Coefficients: \n', clf.coef_
 #print("Residual sum of squares: %.2f" % np.mean((clf.predict(temperaturaMSTest) - temperaturaMGMaxTest) ** 2))
 #print('Variance score: %.2f' % clf.score(temperaturaMSTest, temperaturaMGMaxTest))
 scores = cross_validation.cross_val_score(clf, temperaturaMS, temperaturaMGMax, cv=10)
-print("Accuracy: %0.4f (+/- %0.2f)" % (scores.mean(), scores.std() * 2))
+#print("Accuracy: %0.4f (+/- %0.2f)" % (scores.mean(), scores.std() * 2))
+print(scores.mean())
 
 # Save model
 #clf.fit(temperaturaMS, temperaturaMGMax)

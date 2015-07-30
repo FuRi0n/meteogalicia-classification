@@ -250,15 +250,11 @@ public class BaseLineGenerator {
         }
     }
 
-    public String asText(Boolean header) {
-        String text = "";
+    public List<Double> asList() {
+        List<Double> list = new ArrayList<>();
         for (BaseLine b : baselines) {
-            if (header) {
-                text += b.toString() + "\n";
-            } else {
-                text += (b.getCorrect() / (float) b.getTotal()) * 100 + "%\n";
-            }
+            list.add((b.getCorrect() / (double) b.getTotal()));
         }
-        return text;
+        return list;
     }
 }
