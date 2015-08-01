@@ -2,3 +2,4 @@ datos/*
 *.arff
 *.model
 /dist/
+/nbproject/private/

@@ -1,5 +1,6 @@
 
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -87,11 +88,14 @@ public class ArffGenerator {
     }
 
     private void saveFile(String name, Instances data) {
-        ArffSaver saver = new ArffSaver();
-        saver.setInstances(data);
-        try {
-            saver.setFile(new File(name));
-            saver.writeBatch();
+//        ArffSaver saver = new ArffSaver();
+//        saver.setInstances(data);
+        try (FileWriter fw = new FileWriter(name)) {
+            fw.write(data.toString());
+            fw.close();
+//            saver.setFile(new File(name));
+//            saver.writeBatch();
+
         } catch (IOException ex) {
             Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
         }
